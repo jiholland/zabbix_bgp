@@ -233,7 +233,7 @@ zabbix_export:
           mappings:
             -
               value: '1'
-              newvalue: stoped
+              newvalue: stopped
             -
               value: '2'
               newvalue: started

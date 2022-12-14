@@ -1,6 +1,6 @@
 ```YAML
  ___________________________________
-< ZABBIX template for BGPv4 by SNMP >
+< Zabbix template for BGPv4 by SNMP >
  -----------------------------------
         \   ^__^
          \  (oo)\_______
