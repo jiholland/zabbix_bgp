@@ -1,7 +1,6 @@
----
 zabbix_export:
   version: '6.0'
-  date: '2022-12-14T12:13:28Z'
+  date: '2022-12-16T11:33:36Z'
   groups:
     -
       uuid: 57b7ae836ca64446ba2c296389c009b7
@@ -13,9 +12,9 @@ zabbix_export:
       name: BGP-SNMP
       description: |
         Template for monitoring the BGPv4 process by SNMP.
-
+        
         Tested on Cisco Nexus 9000 Series.
-
+        
         Jørn Ivar Holland
       groups:
         -
@@ -28,9 +27,15 @@ zabbix_export:
           snmp_oid: 1.3.6.1.2.1.15.4.0
           key: bgpIdentifier
           delay: 1h
+          history: 30d
           trends: '0'
           value_type: TEXT
           description: 'The BGP Identifier of local system.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 4h
           tags:
             -
               tag: Application
@@ -41,9 +46,14 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 1.3.6.1.2.1.15.2.0
           key: bgpLocalAs
-          delay: 10m
+          delay: 30m
           history: 30d
           description: 'The local autonomous system number.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 4h
           tags:
             -
               tag: Application
@@ -53,6 +63,7 @@ zabbix_export:
               uuid: e8b3569db81942ff9a75542fe8acc73d
               expression: '(last(/BGP-SNMP/bgpLocalAs,#1)<>last(/BGP-SNMP/bgpLocalAs,#2))=1'
               name: 'BGP local asn has changed'
+              opdata: 'Current asn: {ITEM.LASTVALUE}'
               priority: INFO
               description: 'BGP local autonomous system number has changed.'
               tags:
@@ -68,6 +79,11 @@ zabbix_export:
           delay: 1h
           history: 30d
           description: 'Vector of supported BGP protocol version numbers.'
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 4h
           tags:
             -
               tag: Application
@@ -77,6 +93,7 @@ zabbix_export:
               uuid: ea4ed1b20ce54dffb065684f92deeee7
               expression: '(last(/BGP-SNMP/bgpVersion,#1)<>last(/BGP-SNMP/bgpVersion,#2))=1'
               name: 'BGP version has changed'
+              opdata: 'Current version: {ITEM.LASTVALUE}'
               priority: AVERAGE
               description: 'The BGP version has changed.'
               tags:
@@ -86,12 +103,12 @@ zabbix_export:
       discovery_rules:
         -
           uuid: f0e0b645a74c43bb91d4ff2baf0a7ab6
-          name: 'BGP peers'
+          name: 'BGP peer discovery'
           type: SNMP_AGENT
           snmp_oid: 'discovery[{#BGP_REMOTE_PEER_ID},1.3.6.1.2.1.15.3.1.7,{#BGP_REMOTE_AS},1.3.6.1.2.1.15.3.1.9]'
-          key: bgpPeers
+          key: bgp.peers.discovery
           delay: 1h
-          description: 'Discovering the remote IP address of this entry''s BGP peer and the remote autonomous system number.'
+          description: 'Discover the remote IP address of this entry''s BGP peer and the remote autonomous system number.'
           item_prototypes:
             -
               uuid: 58c7fd2770654614a165006d4e113815
@@ -112,11 +129,12 @@ zabbix_export:
                   uuid: 259e323fbfa5422e8ec51acd118c0afd
                   expression: 'last(/BGP-SNMP/bgpPeer2FsmEstablishedTime[{#SNMPINDEX}])<{$PEER_LOW_TIME}'
                   name: 'BGP peer {#BGP_REMOTE_PEER_ID} has low up time'
+                  opdata: 'Current uptime: {ITEM.LASTVALUE}'
                   priority: INFO
                   description: 'Up time is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
                   dependencies:
                     -
-                      name: 'BGP peer {#BGP_REMOTE_PEER_ID} is disabled'
+                      name: 'BGP peer {#BGP_REMOTE_PEER_ID} is stopped'
                       expression: 'last(/BGP-SNMP/bgpPeerAdminStatus[{#SNMPINDEX}])=1'
                   tags:
                     -
@@ -141,9 +159,9 @@ zabbix_export:
                 -
                   uuid: 58040a72a7984d39b64d426bac182ce8
                   expression: 'last(/BGP-SNMP/bgpPeerAdminStatus[{#SNMPINDEX}])=1'
-                  name: 'BGP peer {#BGP_REMOTE_PEER_ID} is disabled'
+                  name: 'BGP peer {#BGP_REMOTE_PEER_ID} is stopped'
                   priority: AVERAGE
-                  description: 'BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS} has administrative status disabled.'
+                  description: 'BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS} has administrative status stopped.'
                   tags:
                     -
                       tag: scope
@@ -181,6 +199,7 @@ zabbix_export:
                   uuid: 66e5890965544dfd87af2c36f766119c
                   expression: '(last(/BGP-SNMP/bgpPeerRemoteAs[{#SNMPINDEX}],#1)<>last(/BGP-SNMP/bgpPeerRemoteAs[{#SNMPINDEX}],#2))=1'
                   name: 'BGP peer {#BGP_PEER_ID} changed remote asn'
+                  opdata: 'Current asn: {ITEM.LASTVALUE}'
                   priority: INFO
                   description: 'Remote autonomous system number has changed for BGP peer {#BGP_PEER_ID}.'
                   tags:
@@ -193,7 +212,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.2.1.15.3.1.2.{#SNMPINDEX}'
               key: 'bgpPeerState[{#SNMPINDEX}]'
-              delay: 3m
+              delay: 4m
               history: 7d
               description: 'The BGP peer connection state.'
               valuemap:
@@ -207,16 +226,22 @@ zabbix_export:
                   uuid: 5f1174cf271346dd928f6860b90b118d
                   expression: 'last(/BGP-SNMP/bgpPeerState[{#SNMPINDEX}])<>6'
                   name: 'BGP peer {#BGP_REMOTE_PEER_ID} is down'
+                  opdata: 'Current state: {ITEM.LASTVALUE}'
                   priority: HIGH
                   description: 'BGP peer {#BGP_REMOTE_PEER_ID} in AS {#BGP_REMOTE_AS} is not in established state.'
                   dependencies:
                     -
-                      name: 'BGP peer {#BGP_REMOTE_PEER_ID} is disabled'
+                      name: 'BGP peer {#BGP_REMOTE_PEER_ID} is stopped'
                       expression: 'last(/BGP-SNMP/bgpPeerAdminStatus[{#SNMPINDEX}])=1'
                   tags:
                     -
                       tag: scope
                       value: availability
+          preprocessing:
+            -
+              type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 4h
       tags:
         -
           tag: class
@@ -225,7 +250,7 @@ zabbix_export:
         -
           macro: '{$PEER_ESTABLISHED_TIME}'
           value: '14400'
-          description: 'time in sec'
+          description: 'Time in sec'
       valuemaps:
         -
           uuid: 9a0bf04041564b788d02fb06906d562a
