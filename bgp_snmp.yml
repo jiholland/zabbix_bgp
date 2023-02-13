@@ -1,6 +1,6 @@
 zabbix_export:
   version: '6.0'
-  date: '2022-12-16T11:33:36Z'
+  date: '2023-02-13T06:51:36Z'
   groups:
     -
       uuid: 57b7ae836ca64446ba2c296389c009b7
@@ -70,36 +70,6 @@ zabbix_export:
                 -
                   tag: scope
                   value: notice
-        -
-          uuid: a440c4a8fa8146abb43c3762d5ae28e4
-          name: 'BGP version'
-          type: SNMP_AGENT
-          snmp_oid: 1.3.6.1.2.1.15.1.0
-          key: bgpVersion
-          delay: 1h
-          history: 30d
-          description: 'Vector of supported BGP protocol version numbers.'
-          preprocessing:
-            -
-              type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 4h
-          tags:
-            -
-              tag: Application
-              value: BGP
-          triggers:
-            -
-              uuid: ea4ed1b20ce54dffb065684f92deeee7
-              expression: '(last(/BGP-SNMP/bgpVersion,#1)<>last(/BGP-SNMP/bgpVersion,#2))=1'
-              name: 'BGP version has changed'
-              opdata: 'Current version: {ITEM.LASTVALUE}'
-              priority: AVERAGE
-              description: 'The BGP version has changed.'
-              tags:
-                -
-                  tag: scope
-                  value: availability
       discovery_rules:
         -
           uuid: f0e0b645a74c43bb91d4ff2baf0a7ab6
