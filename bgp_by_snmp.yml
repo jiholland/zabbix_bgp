@@ -9,7 +9,6 @@ zabbix_export:
       name: 'BGP by SNMP'
       description: |
         Template for monitoring the BGPv4 process by SNMP.
-        
         Jorn Ivar Holland
       groups:
         - name: Templates/Modules
@@ -61,7 +60,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: d3398517f9eb48508275306c5ca79291
                   expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
-                  name: 'BGP peer {#BGP_REMOTE_PEER_ID} is down'
+                  name: 'BGP: peer {#BGP_REMOTE_PEER_ID} is down'
                   priority: HIGH
                   description: 'BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS} is not in established state.'
                   tags:
@@ -88,7 +87,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: ce67c060d2534142a9e288630d81dd2c
                   expression: 'last(/BGP by SNMP/bgp.peer.time[bgpPeer2FsmEstablishedTime.{#SNMPINDEX}])<{$PEER_ESTABLISHED_TIME}'
-                  name: 'BGP peer {#BGP_REMOTE_PEER_ID} has low up time'
+                  name: 'BGP: peer {#BGP_REMOTE_PEER_ID} has low up time'
                   priority: INFO
                   description: 'Up time is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
                   tags:
