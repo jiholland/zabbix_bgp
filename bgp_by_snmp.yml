@@ -98,6 +98,9 @@ zabbix_export:
                   name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} has low up time'
                   priority: INFO
                   description: 'Up time is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
+                  dependencies:
+                    - name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} is down'
+                      expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
                   tags:
                     - tag: scope
                       value: notice
