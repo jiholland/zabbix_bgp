@@ -37,14 +37,13 @@ zabbix_export:
           type: DEPENDENT
           key: bgp.discovery
           delay: '0'
-          description: 'Discover BGP remote peer id.'
+          description: 'Discover BGP remote peers.'
           item_prototypes:
             - uuid: 6ab954081e8f499bb4fda01efaf6f4b0
               name: 'BGP peer {#BGP_REMOTE_PEER_ID} connection state'
               type: DEPENDENT
               key: 'bgp.peer.state[bgpPeerState.{#SNMPINDEX}]'
               delay: '0'
-              history: 15d
               trends: '0'
               description: 'The BGP peer connection state.'
               valuemap:
@@ -67,7 +66,8 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: d3398517f9eb48508275306c5ca79291
                   expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
-                  name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} is down'
+                  name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} adjacency is not established'
+                  opdata: 'Current value: {ITEM.LASTVALUE1}'
                   priority: HIGH
                   description: 'BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS} is not in established state.'
                   tags:
@@ -78,7 +78,6 @@ zabbix_export:
               type: DEPENDENT
               key: 'bgp.peer.time[bgpPeer2FsmEstablishedTime.{#SNMPINDEX}]'
               delay: '0'
-              history: 15d
               trends: '0'
               units: seconds
               description: 'This timer indicates how long (in seconds) this peer has been in the Established state or how long since this peer was last in the Established state.'
@@ -96,10 +95,11 @@ zabbix_export:
                 - uuid: ce67c060d2534142a9e288630d81dd2c
                   expression: 'last(/BGP by SNMP/bgp.peer.time[bgpPeer2FsmEstablishedTime.{#SNMPINDEX}])<{$PEER_ESTABLISHED_TIME}'
                   name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} has low up time'
+                  opdata: 'Current value: {ITEM.LASTVALUE1}'
                   priority: INFO
                   description: 'Up time is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
                   dependencies:
-                    - name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} is down'
+                    - name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} adjacency is not established'
                       expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
                   tags:
                     - tag: scope
