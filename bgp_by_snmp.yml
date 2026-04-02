@@ -18,7 +18,7 @@ zabbix_export:
           name: 'SNMP walk BGP'
           type: SNMP_AGENT
           snmp_oid: 'walk[1.3.6.1.2.1.15.3.1.2,1.3.6.1.2.1.15.3.1.7,1.3.6.1.2.1.15.3.1.9,1.3.6.1.2.1.15.3.1.16]'
-          key: bgp.walk
+          key: bgp.peer.walk
           history: '0'
           value_type: TEXT
           trends: '0'
@@ -35,7 +35,7 @@ zabbix_export:
         - uuid: 2019bbd13fb04d139de482b97c5c8a8e
           name: 'BGP peer discovery'
           type: DEPENDENT
-          key: bgp.discovery
+          key: bgp.peer.discovery
           delay: '0'
           description: 'Discover BGP remote peers.'
           item_prototypes:
@@ -47,7 +47,7 @@ zabbix_export:
               trends: '0'
               description: 'The BGP peer connection state.'
               valuemap:
-                name: bgpPeerState
+                name: 'BGP peer state'
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
@@ -57,8 +57,10 @@ zabbix_export:
                   parameters:
                     - 1h
               master_item:
-                key: bgp.walk
+                key: bgp.peer.walk
               tags:
+                - tag: component
+                  value: bgp
                 - tag: component
                   value: health
                 - tag: component
@@ -67,19 +69,19 @@ zabbix_export:
                 - uuid: d3398517f9eb48508275306c5ca79291
                   expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
                   name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} adjacency is not established'
-                  opdata: 'Current value: {ITEM.LASTVALUE1}'
+                  opdata: 'Current state: {ITEM.LASTVALUE1}'
                   priority: HIGH
                   description: 'BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS} is not in established state.'
                   tags:
                     - tag: scope
                       value: availability
             - uuid: 0f54c9dc797a42b5a999f364ef0d4d0c
-              name: 'BGP peer {#BGP_REMOTE_PEER_ID} established time'
+              name: 'BGP peer {#BGP_REMOTE_PEER_ID} uptime'
               type: DEPENDENT
               key: 'bgp.peer.time[bgpPeer2FsmEstablishedTime.{#SNMPINDEX}]'
               delay: '0'
               trends: '0'
-              units: seconds
+              units: uptime
               description: 'This timer indicates how long (in seconds) this peer has been in the Established state or how long since this peer was last in the Established state.'
               preprocessing:
                 - type: SNMP_WALK_VALUE
@@ -87,17 +89,20 @@ zabbix_export:
                     - '1.3.6.1.2.1.15.3.1.16.{#SNMPINDEX}'
                     - '0'
               master_item:
-                key: bgp.walk
+                key: bgp.peer.walk
               tags:
+                - tag: component
+                  value: bgp
                 - tag: component
                   value: network
               trigger_prototypes:
                 - uuid: ce67c060d2534142a9e288630d81dd2c
                   expression: 'last(/BGP by SNMP/bgp.peer.time[bgpPeer2FsmEstablishedTime.{#SNMPINDEX}])<{$PEER_ESTABLISHED_TIME}'
-                  name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} has low up time'
-                  opdata: 'Current value: {ITEM.LASTVALUE1}'
+                  name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} has low uptime'
+                  event_name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} has low uptime (<{$PEER_ESTABLISHED_TIME} seconds)'
+                  opdata: 'Current uptime: {ITEM.LASTVALUE1}'
                   priority: INFO
-                  description: 'Up time is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
+                  description: 'Uptime is less than {$PEER_ESTABLISHED_TIME} seconds for BGP peer {#BGP_REMOTE_PEER_ID} in ASN {#BGP_REMOTE_AS}.'
                   dependencies:
                     - name: 'BGP: Peer {#BGP_REMOTE_PEER_ID} adjacency is not established'
                       expression: 'last(/BGP by SNMP/bgp.peer.state[bgpPeerState.{#SNMPINDEX}])<>6'
@@ -105,7 +110,7 @@ zabbix_export:
                     - tag: scope
                       value: notice
           master_item:
-            key: bgp.walk
+            key: bgp.peer.walk
           preprocessing:
             - type: DISCARD_UNCHANGED_HEARTBEAT
               parameters:
@@ -129,7 +134,7 @@ zabbix_export:
           description: 'Time in sec'
       valuemaps:
         - uuid: 2c874367ecef4ad68dd127f1f6826c73
-          name: bgpPeerState
+          name: 'BGP peer state'
           mappings:
             - value: '1'
               newvalue: idle
