@@ -112,9 +112,6 @@ zabbix_export:
           master_item:
             key: bgp.peer.walk
           preprocessing:
-            - type: DISCARD_UNCHANGED_HEARTBEAT
-              parameters:
-                - 1h
             - type: SNMP_WALK_TO_JSON
               parameters:
                 - '{#BGP_REMOTE_PEER_ID}'
@@ -123,6 +120,9 @@ zabbix_export:
                 - '{#BGP_REMOTE_AS}'
                 - 1.3.6.1.2.1.15.3.1.9
                 - '0'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
       tags:
         - tag: class
           value: network
@@ -131,20 +131,20 @@ zabbix_export:
       macros:
         - macro: '{$PEER_ESTABLISHED_TIME}'
           value: '14400'
-          description: 'Time in sec'
+          description: 'Low uptime trigger threshold in seconds.'
       valuemaps:
         - uuid: 2c874367ecef4ad68dd127f1f6826c73
           name: 'BGP peer state'
           mappings:
             - value: '1'
-              newvalue: idle
+              newvalue: Idle
             - value: '2'
-              newvalue: connect
+              newvalue: Connect
             - value: '3'
-              newvalue: active
+              newvalue: Active
             - value: '4'
-              newvalue: opensent
+              newvalue: OpenSent
             - value: '5'
-              newvalue: openconfirm
+              newvalue: OpenConfirm
             - value: '6'
-              newvalue: established
+              newvalue: Established
